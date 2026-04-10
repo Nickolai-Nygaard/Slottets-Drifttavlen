@@ -143,6 +143,13 @@ Alternativt direkte med Docker:
 docker run --name slottets-sqlserver -e MYSQL_ROOT_PASSWORD=your_root_password -e MYSQL_DATABASE=your_database_name -e MYSQL_USER=your_username -e MYSQL_PASSWORD=your_user_password -p 3307:3306 -d mysql
 ```
 
+### Installer Entity Framework Core CLI
+Nogle ting er oprettet ved hjælp af Entity Framework derfor skal vi installer det for at opdatere databasen og senere lave migrations
+brug Kommandoen i Terminalen
+```sh
+dotnet tool install --global dotnet-ef
+```
+
 Migrere og opdatere databasen:
 ```sh
 dotnet ef migrations add IdentityFramework --project src/Infrastructure.Data --startup-project src/Api
