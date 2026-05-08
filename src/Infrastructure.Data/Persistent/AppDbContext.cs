@@ -23,7 +23,7 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options) : Iden
     public DbSet<MedicineRecord> MedicineRecord { get; set; }
     public DbSet<PainkillerRecord> PainkillerRecord { get; set; }
     public DbSet<PhoneAssignment> PhoneAssignments { get; set; }
-
+    public DbSet<TaskList> TaskLists { get; set; }
     // Identity-related DbSet for refresh tokens
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -50,6 +50,7 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options) : Iden
         _ = modelBuilder.ApplyConfiguration(new Configurations.ResidentNoteConfiguration());
         _ = modelBuilder.ApplyConfiguration(new Configurations.MedicineRecordConfiguration());
         _ = modelBuilder.ApplyConfiguration(new Configurations.PainkillerRecordConfiguration());
+        _ = modelBuilder.ApplyConfiguration(new Configurations.TaskListConfiguration());
 
         _ = modelBuilder.Entity<MedicineStatusView>()
             .HasNoKey()

@@ -13,7 +13,7 @@ using Domain.Interfaces;
 
 namespace Domain.Entities;
 
-internal class Task : IEntity
+public class TaskList : IEntity
 {
     [Key]
     public Guid Id { get; set; }
@@ -24,9 +24,8 @@ internal class Task : IEntity
     [MaxLength(200)]
     public string Description { get; set; } = string.Empty;
     [Required]
-    [MaxLength(50)]
-    public string Status { get; set; } = string.Empty;
-    [Required]
     public TaskListStatus? TaskStatus { get; set; }
+    [Required]
+    public DateTime DueTime { get; set; }
 
 }
