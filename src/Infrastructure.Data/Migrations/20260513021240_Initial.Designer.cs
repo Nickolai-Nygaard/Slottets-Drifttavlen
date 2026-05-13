@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260511015329_Initial")]
+    [Migration("20260513021240_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -24,6 +24,38 @@ namespace Infrastructure.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.Entities.AnonymizationCandidate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid>("ResidentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("RetentionPolicyId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SuggestedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ResidentId");
+
+                    b.HasIndex("RetentionPolicyId");
+
+                    b.ToTable("AnonymizationCandidates");
+                });
 
             modelBuilder.Entity("Domain.Entities.AuditEntry", b =>
                 {
@@ -751,6 +783,151 @@ namespace Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.RetentionPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<TimeSpan>("LegalMinimum")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeSpan>("RetentionPeriod")
+                        .HasColumnType("time(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .IsUnique();
+
+                    b.ToTable("RetentionPolicies");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000001"),
+                            Category = 0,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(3650, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(3650, 0, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000002"),
+                            Category = 1,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(730, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(1825, 0, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000003"),
+                            Category = 2,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(365, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(1095, 0, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000004"),
+                            Category = 3,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(90, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(180, 0, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000005"),
+                            Category = 4,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(180, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(365, 0, 0, 0, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("a1111111-0000-0000-0000-000000000006"),
+                            Category = 5,
+                            EffectiveFrom = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            LegalMinimum = new TimeSpan(7, 0, 0, 0, 0),
+                            RetentionPeriod = new TimeSpan(30, 0, 0, 0, 0)
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.RetentionPolicyAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("ChangedByEmployeeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<TimeSpan>("NewPeriod")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeSpan>("PreviousPeriod")
+                        .HasColumnType("time(6)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid>("RetentionPolicyId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RetentionPolicyId");
+
+                    b.ToTable("RetentionPolicyAudits");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SecurityIncident", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("InvestigationNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<Guid?>("ReportedByEmployeeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("ResolvedByEmployeeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SecurityIncidents");
+                });
+
             modelBuilder.Entity("Domain.Entities.StaffAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -841,6 +1018,9 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -947,6 +1127,22 @@ namespace Infrastructure.Data.Migrations
                             SecurityStamp = "5e9a0fd8-e3f1-4d66-afe3-77e1e83a7446",
                             TwoFactorEnabled = false,
                             UserName = "kasperholm@example.com"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c0ffee00-dead-beef-cafe-000000000001",
+                            Email = "dashboard@slottet.dk",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "DASHBOARD@SLOTTET.DK",
+                            NormalizedUserName = "DASHBOARD@SLOTTET.DK",
+                            PasswordHash = "AQAAAAEAACcQAAAAEEGYLbEVvDkMGpWxvBizSJSS95uMkciMO3NcZV2yi+7goH8chkCEacnfd4IcKtrBaQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c0ffee00-dead-beef-cafe-000000000002",
+                            TwoFactorEnabled = false,
+                            UserName = "dashboard@slottet.dk"
                         });
                 });
 
@@ -1080,6 +1276,12 @@ namespace Infrastructure.Data.Migrations
                             Id = new Guid("ee697c76-947a-4fe2-8b14-40194c30bdae"),
                             Name = "caretaker",
                             NormalizedName = "CARETAKER"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0a5b0a1-0000-4000-8000-000000000001"),
+                            Name = "dashboard",
+                            NormalizedName = "DASHBOARD"
                         });
                 });
 
@@ -1109,24 +1311,17 @@ namespace Infrastructure.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            ClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
-                            ClaimValue = "CanViewMedicine",
+                            Id = 2,
+                            ClaimType = "permission",
+                            ClaimValue = "view:medicine",
                             RoleId = new Guid("ee697c76-947a-4fe2-8b14-40194c30bdae")
                         },
                         new
                         {
-                            Id = 2,
-                            ClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
-                            ClaimValue = "CanManageResidents",
-                            RoleId = new Guid("d1c9e8b5-3f4a-4c2e-9a1b-5e6f7a8b9c0d")
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
-                            ClaimValue = "CanViewMedicine",
-                            RoleId = new Guid("d1c9e8b5-3f4a-4c2e-9a1b-5e6f7a8b9c0d")
+                            Id = 1,
+                            ClaimType = "permission",
+                            ClaimValue = "manage:residents",
+                            RoleId = new Guid("fabc2277-7992-491b-ae4a-bc78f8de56aa")
                         });
                 });
 
@@ -1152,6 +1347,57 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AspNetUserClaims", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1001,
+                            ClaimType = "permission",
+                            ClaimValue = "manage:residents",
+                            UserId = new Guid("4711a300-711e-4132-86d4-cafd3f11deec")
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            ClaimType = "permission",
+                            ClaimValue = "department:slottets:basic",
+                            UserId = new Guid("30cffcf9-5784-4fa9-9c10-c013ef3faf16")
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            ClaimType = "permission",
+                            ClaimValue = "department:skoven:basic",
+                            UserId = new Guid("37155b80-7111-422a-aba6-89d7070f1644")
+                        },
+                        new
+                        {
+                            Id = 1004,
+                            ClaimType = "permission",
+                            ClaimValue = "department:skoven:basic",
+                            UserId = new Guid("b836e975-e775-48bc-8b84-5d2bdd5bd87a")
+                        },
+                        new
+                        {
+                            Id = 1005,
+                            ClaimType = "permission",
+                            ClaimValue = "department:marken:basic",
+                            UserId = new Guid("48245a9c-f2a5-4e8f-9554-b6acc9206d37")
+                        },
+                        new
+                        {
+                            Id = 1006,
+                            ClaimType = "permission",
+                            ClaimValue = "department:slottets:basic",
+                            UserId = new Guid("4711a300-711e-4132-86d4-cafd3f11deec")
+                        },
+                        new
+                        {
+                            Id = 1007,
+                            ClaimType = "permission",
+                            ClaimValue = "department:all:view",
+                            UserId = new Guid("3a21f8e1-885b-4394-abf0-ed0baeea239b")
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
@@ -1219,6 +1465,11 @@ namespace Infrastructure.Data.Migrations
                         {
                             UserId = new Guid("48245a9c-f2a5-4e8f-9554-b6acc9206d37"),
                             RoleId = new Guid("ee697c76-947a-4fe2-8b14-40194c30bdae")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+                            RoleId = new Guid("d0a5b0a1-0000-4000-8000-000000000001")
                         });
                 });
 
@@ -1239,6 +1490,25 @@ namespace Infrastructure.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.AnonymizationCandidate", b =>
+                {
+                    b.HasOne("Domain.Entities.Resident", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.RetentionPolicy", "RetentionPolicy")
+                        .WithMany("Candidates")
+                        .HasForeignKey("RetentionPolicyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Resident");
+
+                    b.Navigation("RetentionPolicy");
                 });
 
             modelBuilder.Entity("Domain.Entities.ChangeDetail", b =>
@@ -1297,6 +1567,17 @@ namespace Infrastructure.Data.Migrations
                         .HasForeignKey("ResidentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.RetentionPolicyAudit", b =>
+                {
+                    b.HasOne("Domain.Entities.RetentionPolicy", "RetentionPolicy")
+                        .WithMany("AuditHistory")
+                        .HasForeignKey("RetentionPolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RetentionPolicy");
                 });
 
             modelBuilder.Entity("Domain.Entities.StaffAssignment", b =>
@@ -1388,6 +1669,13 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("Painkillers");
 
                     b.Navigation("StaffAssignments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.RetentionPolicy", b =>
+                {
+                    b.Navigation("AuditHistory");
+
+                    b.Navigation("Candidates");
                 });
 #pragma warning restore 612, 618
         }

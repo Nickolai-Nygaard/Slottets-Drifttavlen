@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Team6. All rights reserved. 
 //  No warranty, explicit or implicit, provided.
 
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -22,13 +21,10 @@ namespace WebUI.Client.Components.Pages.Residents;
 public partial class Residents : ComponentBase
 {
     #region Injected Services
-
     [Inject]
     private IResidentService ResidentService { get; set; } = default!;
-
     [Inject]
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
-
     #endregion
 
     #region Fields
@@ -45,7 +41,7 @@ public partial class Residents : ComponentBase
         [Department.Slottet.ToString(), Department.Skoven.ToString(), Department.Marken.ToString()];
 
     // Departments visible to the current user (filtered by Department claim, or all for admin/superuser)
-    private string[] DepartmentOptions = AllDepartmentOptions;
+    private readonly string[] DepartmentOptions = AllDepartmentOptions;
 
     private IEnumerable<Resident> FilteredResidents =>
         _residents.Where(r => r.Department.ToString() == _selectedDepartment);
@@ -79,35 +75,39 @@ public partial class Residents : ComponentBase
     #region Lifecycle
 
     /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
+    //protected override Task OnInitializedAsync()
+    //{
+    //    // Data loading is deferred to OnAfterRenderAsync: during SSR pre-render
+    //    // JS interop (localStorage) is unavailable so the Bearer token cannot be
+    //    // read, and every API call would return 401. OnAfterRenderAsync only runs
+    //    // during interactive rendering where localStorage is accessible.
+    //    return Task.CompletedTask;
+    //}
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await InitializeAuthorizationAsync();
+        await LoadResidentsAsync();
+        StateHasChanged();
+    }
+
+    private async Task InitializeAuthorizationAsync()
     {
         AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         ClaimsPrincipal user = authState.User;
 
-        bool isAdmin = user.IsInRole("admin");
-        bool hasCanManageClaim = user.HasClaim(
-            c => c.Type == ClaimTypes.Role && c.Value == "CanManageResidents");
-        _hasManageClaim = isAdmin || hasCanManageClaim;
-
-        // Null means the user has no department restriction (admin).
-        _userDepartment = isAdmin ? null : user.FindFirstValue("Department");
-
-        // Only show tabs for the user's own department, unless admin (show all).
-        if (_userDepartment is not null)
-        {
-            DepartmentOptions = AllDepartmentOptions.Contains(_userDepartment)
-                ? [_userDepartment]
-                : [];
-            _selectedDepartment = _userDepartment;
-        }
-
-        await LoadResidentsAsync();
+        _hasManageClaim = user.HasClaim(c => c.Type == "permission" && c.Value == "manage:residents");
+        _userDepartment = user.FindFirst("department")?.Value;
     }
-
     #endregion
 
     #region Data Loading
-
     private async Task LoadResidentsAsync()
     {
         _isLoading = true;

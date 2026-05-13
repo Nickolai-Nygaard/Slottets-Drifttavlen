@@ -55,6 +55,27 @@ public class ResidentController(IResidentRepository residentRepository) : Contro
         return Ok(result);
     }
 
+    [HttpGet("department/{department}")]
+    public async Task<ActionResult<IEnumerable<ResidentResponseDto>>> GetByDepartment(Department department, CancellationToken cancellationToken)
+    {
+        IEnumerable<Resident> residents = await _residentRepository.GetAllAsync(department, cancellationToken);
+        IEnumerable<ResidentResponseDto> result = residents.Select(r => new ResidentResponseDto
+        {
+            Id = r.Id,
+            Initials = r.Initials,
+            TrafficLightStatus = r.TrafficLightStatus.HasValue ? (int)r.TrafficLightStatus.Value : null,
+            Department = r.Department,
+            Notes = [.. r.Notes.Select(n => new ResidentNoteDto
+        {
+            Id = n.Id,
+            Note = n.Note,
+            Timestamp = n.EditedAt,
+            Initials = string.Empty
+        })]
+        });
+        return Ok(result);
+    }
+
     /// <summary>
     /// Creates a new resident.
     /// </summary>
@@ -215,11 +236,6 @@ public class ResidentController(IResidentRepository residentRepository) : Contro
         string? deptClaim = principal?.FindFirstValue("Department");
 
         // No department claim → unrestricted (admin)
-        if (string.IsNullOrEmpty(deptClaim))
-        {
-            return true;
-        }
-
-        return Enum.TryParse<Department>(deptClaim, out Department userDept) && userDept == department;
+        return string.IsNullOrEmpty(deptClaim) || (Enum.TryParse<Department>(deptClaim, out Department userDept) && userDept == department);
     }
 }
