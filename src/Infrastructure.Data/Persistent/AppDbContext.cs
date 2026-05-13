@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Team6. All rights reserved. 
+// Copyright (c) 2026 Team6. All rights reserved.
 //  No warranty, explicit or implicit, provided.
 
 using Domain.Entities;
@@ -23,11 +23,15 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options) : Iden
     public DbSet<MedicineRecord> MedicineRecord { get; set; }
     public DbSet<PainkillerRecord> PainkillerRecord { get; set; }
     public DbSet<PhoneAssignment> PhoneAssignments { get; set; }
+    public DbSet<StaffAssignment> StaffAssignments { get; set; }
+    public DbSet<Employee> Employees { get; set; }
     public DbSet<TaskList> TaskLists { get; set; }
+
     // Identity-related DbSet for refresh tokens
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public DbSet<AuditEntry> AuditEntries { get; set; }
+    public DbSet<ChangeDetail> ChangeDetails { get; set; }
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -50,6 +54,8 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options) : Iden
         _ = modelBuilder.ApplyConfiguration(new Configurations.ResidentNoteConfiguration());
         _ = modelBuilder.ApplyConfiguration(new Configurations.MedicineRecordConfiguration());
         _ = modelBuilder.ApplyConfiguration(new Configurations.PainkillerRecordConfiguration());
+        _ = modelBuilder.ApplyConfiguration(new Configurations.ChangeDetailConfiguration());
+        _ = modelBuilder.ApplyConfiguration(new Configurations.EmployeeConfiguration());
         _ = modelBuilder.ApplyConfiguration(new Configurations.TaskListConfiguration());
 
         _ = modelBuilder.Entity<MedicineStatusView>()

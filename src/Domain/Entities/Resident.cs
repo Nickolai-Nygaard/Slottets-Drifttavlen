@@ -23,7 +23,10 @@ public class Resident : IEntity
     public string LastName { get; set; } = string.Empty;
     [Required]
     public TrafficLightStatus? TrafficLightStatus { get; set; }
+    [Required]
+    public Department Department { get; set; }
     public virtual ICollection<ResidentNote> Notes { get; set; } = [];
     public virtual ICollection<MedicineRecord> Medicines { get; set; } = [];
     public virtual ICollection<PainkillerRecord> Painkillers { get; set; } = [];
+    public virtual ICollection<StaffAssignment> StaffAssignments { get; set; } = [];
 }
