@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Core.Interfaces.Repositories;
+
 using Domain.Entities;
 using Domain.Enums;
 
@@ -16,9 +18,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Repositories;
 
-public class TaskListRepository(AppDbContext dbContext) : Repository<TaskList>(dbContext)
+public class TaskListRepository(AppDbContext dbContext) : Repository<TaskList>(dbContext), ITaskListRepository
 {
-    public async Task<IEnumerable<TaskList>> GetAvailableTasks(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TaskList>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
     {
         return await _context.TaskLists
             .AsNoTracking()

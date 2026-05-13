@@ -7,7 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Core.DTOs;
+using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Mappers;
 
 using Domain.Entities;
 
@@ -15,15 +18,16 @@ namespace Core.Services;
 
 public class TaskListService : ITaskListService
 {
-    private readonly ITaskListService _taskListService;
+    private readonly ITaskListRepository _taskListRepository;
 
-    public TaskListService(ITaskListService taskListService)
+    public TaskListService(ITaskListRepository taskListRepository)
     {
-        _taskListService = taskListService;
+        _taskListRepository = taskListRepository;
     }
 
-    public async Task<IEnumerable<TaskList>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TaskListDto>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
     {
-        return await _taskListService.GetAvailTasksByShiftAsync(cancellationToken);
+        var tasks = await _taskListRepository.GetAvailTasksByShiftAsync(cancellationToken);
+        return tasks.Select(t => t.ToTaskListDto());
     }
 }

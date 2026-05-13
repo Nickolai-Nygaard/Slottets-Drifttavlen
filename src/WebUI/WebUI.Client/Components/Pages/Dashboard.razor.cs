@@ -1,6 +1,9 @@
 // Copyright (c) 2026 Team6. All rights reserved. 
 //  No warranty, explicit or implicit, provided.
 
+using Core.DTOs;
+using Core.Services;
+
 using Domain.Entities;
 using Domain.Enums;
 
@@ -17,6 +20,9 @@ public partial class Dashboard
 
     [Inject]
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+    [Inject]
+    private TaskListService TaskListService { get; set; } = default!;
     #endregion
     #region Fields
 
@@ -33,6 +39,8 @@ public partial class Dashboard
 
     [Parameter]
     public string? Department { get; set; }
+
+    private IEnumerable<TaskListDto> tasks = [];
     #endregion
     #region Lifecycle
     // JS interop (localStorage) is only available after the component is rendered interactively
@@ -90,6 +98,11 @@ public partial class Dashboard
 
         _isLoading = false;
         StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        tasks = await TaskListService.GetAvailTasksByShiftAsync();
     }
     #endregion
 }

@@ -11,8 +11,9 @@ using Core.DTOs;
 
 using Domain.Entities;
 
-namespace Core.Interfaces.Services;
-public interface ITaskListService
+namespace Core.Interfaces.Managers;
+
+public interface ITaskListManager
 {
-    Task<IEnumerable<TaskListDto>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<TaskListDto>> GetAvailableTasksByShift(CancellationToken cancellationToken = default);
 }
