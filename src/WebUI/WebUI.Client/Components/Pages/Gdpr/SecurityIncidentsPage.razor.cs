@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Team6. All rights reserved. 
+// Copyright (c) 2026 Team6. All rights reserved.
 //  No warranty, explicit or implicit, provided.
 
 using Core.DTOs.Security;
@@ -7,8 +7,9 @@ using Core.Interfaces.Services;
 using Domain.Enums;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 
-namespace WebUI.Components.Pages.Gdpr;
+namespace WebUI.Client.Components.Pages.Gdpr;
 
 /// <summary>
 /// Security Incidents page — Admin investigates, escalates, and closes security incidents (UC-010).
@@ -22,6 +23,8 @@ public partial class SecurityIncidentsPage : ComponentBase
 
     [Inject]
     private ISecurityIncidentService SecurityIncidentService { get; set; } = default!;
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
     #endregion
 
@@ -39,9 +42,27 @@ public partial class SecurityIncidentsPage : ComponentBase
 
     #region Lifecycle
 
-    protected override async Task OnInitializedAsync()
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender)
+        {
+            return;
+        }
+        // Ensure the WASM auth state has been materialised from localStorage before
+        // invoking API calls, so JwtAuthorizationMessageHandler can attach the
+        // Bearer token. OnInitializedAsync would run during InteractiveAuto's
+        // server pre-render where JS interop is unavailable and every API call
+        // returns 401. Mirrors the pattern established by GdprDashboardPage.
+        await InitializeAuthorizationAsync();
         await LoadIncidentsAsync();
+        StateHasChanged();
+    }
+
+    private async Task InitializeAuthorizationAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _ = authState.User;
     }
 
     #endregion
@@ -55,7 +76,6 @@ public partial class SecurityIncidentsPage : ComponentBase
         {
             IEnumerable<SecurityIncidentDto> result = await SecurityIncidentService.GetIncidentsAsync(CancellationToken.None);
             _incidents = [.. result];
-            // Re-select after reload if previous selection still exists
             if (_selectedIncident is not null)
             {
                 _selectedIncident = _incidents.FirstOrDefault(i => i.Id == _selectedIncident.Id);
@@ -176,6 +196,49 @@ public partial class SecurityIncidentsPage : ComponentBase
         IncidentStatus.Closed => "bg-success",
         _ => "bg-light text-dark"
     };
+
+    /// <summary>
+    /// Returns the Bootstrap badge class for the Art. 33 notification deadline countdown.
+    /// Once the incident has been notified or closed, the deadline is informational only.
+    /// </summary>
+    private static string GetDeadlineBadgeClass(TimeSpan remaining, IncidentStatus status)
+    {
+        if (status == IncidentStatus.BreachNotified || status == IncidentStatus.Closed)
+        {
+            return "bg-secondary";
+        }
+        if (remaining <= TimeSpan.Zero)
+        {
+            return "bg-danger";
+        }
+        if (remaining <= TimeSpan.FromHours(24))
+        {
+            return "bg-warning text-dark";
+        }
+        return "bg-info text-dark";
+    }
+
+    /// <summary>
+    /// Human-readable countdown to the GDPR Art. 33(1) 72-hour deadline.
+    /// </summary>
+    private static string FormatDeadline(TimeSpan remaining, IncidentStatus status)
+    {
+        if (status == IncidentStatus.BreachNotified)
+        {
+            return "Notified";
+        }
+        if (status == IncidentStatus.Closed)
+        {
+            return "Closed (no notification)";
+        }
+        if (remaining <= TimeSpan.Zero)
+        {
+            return $"OVERDUE by {Math.Abs(remaining.TotalHours):N0}h";
+        }
+        return remaining.TotalHours >= 1
+            ? $"{remaining.TotalHours:N0}h remaining"
+            : $"{remaining.TotalMinutes:N0}m remaining";
+    }
 
     private void ShowFeedback(string message, bool isError)
     {

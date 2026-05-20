@@ -14,6 +14,7 @@ using Core.Interfaces.Services;
 using Core.Mappers;
 
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Core.Services;
 
@@ -22,8 +23,8 @@ public class TaskListService(ITaskListManager taskListManager) : ITaskListServic
     private readonly ITaskListManager _taskListManager = taskListManager;
 
 
-    public async Task<IEnumerable<TaskListDto>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TaskListDto>> GetAvailableTasksByDepartmentAsync(Department department, CancellationToken cancellationToken = default)
     {
-        return await _taskListManager.GetAvailableTasksByShiftAsync(cancellationToken);
+        return await _taskListManager.GetDashboardTasksByDepartmentAsync(department, cancellationToken);
     }
 }

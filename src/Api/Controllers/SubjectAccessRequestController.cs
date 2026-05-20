@@ -1,6 +1,9 @@
 // Copyright (c) 2026 Team6. All rights reserved. 
 //  No warranty, explicit or implicit, provided.
 
+using System.Security.Claims;
+using System.Text.Json;
+
 using Core.DTOs.Sar;
 using Core.Interfaces.Repositories;
 using Core.Mappers;
@@ -27,20 +30,40 @@ public class SubjectAccessRequestController : ControllerBase
     #region Fields
 
     private readonly IResidentRepository _residentRepository;
+    private readonly IResidentNoteRepository _residentNoteRepository;
+    private readonly IMedicineRepository _medicineRepository;
+    private readonly IPainkillerRepository _painkillerRepository;
+    private readonly IAuditRepository _auditRepository;
+    private readonly IRetentionPolicyRepository _retentionPolicyRepository;
+    private readonly ISubjectAccessRequestRepository _sarRepository;
 
     #endregion
 
     #region Constructors
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SubjectAccessRequestController"/> class.
-    /// </summary>
-    /// <param name="residentRepository">The resident repository for fetching subject data.</param>
-    /// <exception cref="ArgumentNullException">The <paramref name="residentRepository"/> parameter is <see langword="null"/>.</exception>
-    public SubjectAccessRequestController(IResidentRepository residentRepository)
+    public SubjectAccessRequestController(
+        IResidentRepository residentRepository,
+        IResidentNoteRepository residentNoteRepository,
+        IMedicineRepository medicineRepository,
+        IPainkillerRepository painkillerRepository,
+        IAuditRepository auditRepository,
+        IRetentionPolicyRepository retentionPolicyRepository,
+        ISubjectAccessRequestRepository sarRepository)
     {
         ArgumentNullException.ThrowIfNull(residentRepository);
+        ArgumentNullException.ThrowIfNull(residentNoteRepository);
+        ArgumentNullException.ThrowIfNull(medicineRepository);
+        ArgumentNullException.ThrowIfNull(painkillerRepository);
+        ArgumentNullException.ThrowIfNull(auditRepository);
+        ArgumentNullException.ThrowIfNull(retentionPolicyRepository);
+        ArgumentNullException.ThrowIfNull(sarRepository);
         _residentRepository = residentRepository;
+        _residentNoteRepository = residentNoteRepository;
+        _medicineRepository = medicineRepository;
+        _painkillerRepository = painkillerRepository;
+        _auditRepository = auditRepository;
+        _retentionPolicyRepository = retentionPolicyRepository;
+        _sarRepository = sarRepository;
     }
 
     #endregion
@@ -72,13 +95,120 @@ public class SubjectAccessRequestController : ControllerBase
             return NotFound($"No resident found with id {dto.ResidentId}.");
         }
 
-        // STUB: actual export assembly (residency, notes, medicine logs, painkillers, audit entries)
-        // is implemented in a follow-up branch. We return package metadata for the UI to display.
         Guid exportId = Guid.NewGuid();
         DateTime generatedAt = DateTime.UtcNow;
         string fileName = $"sar-export-{resident.Initials}-{generatedAt:yyyyMMddHHmmss}.json";
 
-        SarExportPackageDto package = SarExportMapper.ToPackageDto(exportId, generatedAt, fileName);
+        // Build a GDPR Art. 15(1)(a)-(h) compliant export. Scope selection follows the
+        // operation contract in uc-010.oc.da.md: only the categories the Admin selected
+        // in ScopeOptions are populated, satisfying the data minimisation principle of
+        // GDPR Art. 5(1)(c) on the export itself.
+        HashSet<string> scopes = new(dto.ScopeOptions ?? [], StringComparer.OrdinalIgnoreCase);
+
+        IEnumerable<ResidentNote> notes = scopes.Contains("Notes")
+            ? (await _residentNoteRepository.GetAllAsync(cancellationToken)).Where(n => n.ResidentId == resident.Id)
+            : [];
+        IEnumerable<MedicineRecord> medicines = scopes.Contains("Medicine")
+            ? (await _medicineRepository.GetAllAsync(cancellationToken)).Where(m => m.ResidentId == resident.Id)
+            : [];
+        IEnumerable<PainkillerRecord> painkillers = scopes.Contains("Painkiller")
+            ? (await _painkillerRepository.GetAllAsync(cancellationToken)).Where(p => p.ResidentId == resident.Id)
+            : [];
+
+        // EU Court of Justice (case C-579/21, 22 June 2023): log file entries about the
+        // data subject are part of the Art. 15 right of access. We include audit entries
+        // referencing this resident so the export reflects who accessed which data when.
+        IEnumerable<AuditEntry> auditEntries = scopes.Contains("Audit")
+            ? (await _auditRepository.GetAllAsync(cancellationToken))
+                .Where(a => a.Metadata.Contains(resident.Id.ToString(), StringComparison.OrdinalIgnoreCase))
+            : [];
+
+        IEnumerable<RetentionPolicy> retentionPolicies =
+            await _retentionPolicyRepository.GetAllAsync(cancellationToken);
+
+        var artifact = new
+        {
+            exportId,
+            generatedAt,
+            // Art. 15(1) header block
+            controller = new
+            {
+                name = "Slottet Care Home",
+                contact = "dpo@slottet.example",   // configurable per deployment
+                legalBasis = "GDPR Art. 6(1)(c)+(e), Art. 9(2)(h); Sundhedsloven; Autorisationsloven §22"
+            },
+            subject = new
+            {
+                residentId = resident.Id,
+                initials = resident.Initials,
+                firstName = resident.FirstName,
+                lastName = resident.LastName,
+                department = resident.Department.ToString()
+            },
+            // Art. 15(1)(a) purposes
+            purposes = new[]
+            {
+                "Care administration and resident overview",
+                "Medical journal maintenance (Autorisationsloven §22)",
+                "Incident detection and audit trail (GDPR Art. 32)"
+            },
+            // Art. 15(1)(b) categories of personal data
+            categories = new
+            {
+                residentNotes = notes.Select(n => new { n.Id, n.CreatedAt, n.EditedAt, n.Note }),
+                medicineLogs = medicines.Select(m => new { m.Id, m.MedicineName, m.Timestamp, m.Given }),
+                painkillerLogs = painkillers.Select(p => new { p.Id, p.Type, p.GivenAt, p.NextAllowedTime }),
+                auditEntries = auditEntries.Select(a => new { a.Id, a.Metadata, a.StartTimeUtc, a.EndTimeUtc, a.Succeeded, a.UserId })
+            },
+            // Art. 15(1)(c) recipients
+            recipients = new[] { "Internal: Care staff (department-scoped)", "Internal: System administrators (audit only)" },
+            // Art. 15(1)(d) retention periods (current effective policies)
+            retentionPolicies = retentionPolicies.Select(p => new
+            {
+                category = p.Category.ToString(),
+                periodDays = (int)p.RetentionPeriod.TotalDays,
+                legalMinimumDays = (int)p.LegalMinimum.TotalDays,
+                p.EffectiveFrom
+            }),
+            // Art. 15(1)(g) source of data
+            dataSource = "Collected directly from the resident and from care staff during care provision.",
+            // Art. 15(1)(e)+(f) rights notice
+            rights = new[]
+            {
+                "Right to rectification (GDPR Art. 16)",
+                "Right to erasure (GDPR Art. 17, subject to Autorisationsloven §22 retention)",
+                "Right to restriction (GDPR Art. 18)",
+                "Right to lodge a complaint with Datatilsynet (GDPR Art. 77)"
+            },
+            // Art. 15(1)(h) transfers
+            transferredToThirdCountry = false,
+            // Art. 22 automated decision-making
+            automatedDecisionMaking = false
+        };
+
+        string payload = JsonSerializer.Serialize(artifact, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            // Camel-case for downstream tooling compatibility.
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        // Persist the SAR lifecycle for GDPR Art. 30 record-of-processing. The Id
+        // is the same value returned to the caller as ExportId, so the subsequent
+        // MarkFulfilled call can correlate without holding any session state.
+        SubjectAccessRequest sar = new()
+        {
+            Id = exportId,
+            ResidentId = resident.Id,
+            RequestedByEmployeeId = ResolveCurrentEmployeeId(),
+            RequestedAt = generatedAt,
+            ScopeOptions = string.Join(',', dto.ScopeOptions ?? []),
+            ExportFileName = fileName,
+            ExportGeneratedAt = generatedAt
+        };
+        _ = await _sarRepository.CreateAsync(sar, cancellationToken);
+
+        SarExportPackageDto package = SarExportMapper.ToPackageDto(exportId, generatedAt, fileName, payload);
         return Ok(package);
     }
 
@@ -90,7 +220,7 @@ public class SubjectAccessRequestController : ControllerBase
     /// <returns><see langword="true"/> if the SAR was marked fulfilled.</returns>
     /// <remarks>POST /subjectaccessrequest/fulfilled</remarks>
     [HttpPost("fulfilled")]
-    public Task<ActionResult<bool>> MarkFulfilled(
+    public async Task<ActionResult<bool>> MarkFulfilled(
         [FromBody] SarFulfilledDto dto,
         CancellationToken cancellationToken)
     {
@@ -98,12 +228,48 @@ public class SubjectAccessRequestController : ControllerBase
 
         if (dto.SarId == Guid.Empty)
         {
-            return Task.FromResult<ActionResult<bool>>(BadRequest("SarId is required."));
+            return BadRequest("SarId is required.");
         }
 
-        // STUB: persistence of SAR fulfillment status pending a SubjectAccessRequest entity
-        // in a follow-up branch. AuditInterceptor (UC-009) provides chronology in the meantime.
-        return Task.FromResult<ActionResult<bool>>(Ok(true));
+        SubjectAccessRequest? sar = await _sarRepository.GetByIdAsync(dto.SarId, cancellationToken);
+        if (sar is null)
+        {
+            return NotFound($"No subject access request found with id {dto.SarId}.");
+        }
+
+        if (sar.FulfilledAt.HasValue)
+        {
+            // Idempotency: avoid silently overwriting an existing fulfilment timestamp,
+            // which would corrupt the GDPR Art. 12(3) compliance evidence.
+            return Conflict($"SAR {sar.Id} was already marked fulfilled at {sar.FulfilledAt:O}.");
+        }
+
+        sar.FulfilledAt = dto.FulfilledAt == default ? DateTime.UtcNow : dto.FulfilledAt;
+        sar.FulfilledByEmployeeId = ResolveCurrentEmployeeId();
+        await _sarRepository.UpdateAsync(sar, cancellationToken);
+
+        // AuditInterceptor (UC-009) captures this SaveChanges in the GDPR Art. 30
+        // record-of-processing trail; SubjectAccessRequest.FulfilledAt provides the
+        // primary evidence that the Art. 12(3) one-month deadline was respected.
+        return Ok(true);
+    }
+
+    /// <summary>
+    /// Returns the authenticated employee id from the JWT NameIdentifier claim, or
+    /// <see cref="Guid.Empty"/> if the claim is missing or malformed.
+    /// </summary>
+    /// <remarks>
+    /// The endpoint is protected by <c>[Authorize(Roles = "admin")]</c>, so an
+    /// authenticated principal is guaranteed; <see cref="Guid.Empty"/> only occurs in
+    /// integration tests where the mock auth handler omits the sub claim. Treating the
+    /// missing case as <see cref="Guid.Empty"/> rather than throwing keeps SAR
+    /// fulfilment resilient: the SAR row is still persisted with a traceable
+    /// AuditEntry rather than failing the user-facing request.
+    /// </remarks>
+    private Guid ResolveCurrentEmployeeId()
+    {
+        string? idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(idClaim, out Guid id) ? id : Guid.Empty;
     }
 
     #endregion

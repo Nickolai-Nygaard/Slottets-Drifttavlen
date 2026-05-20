@@ -28,11 +28,15 @@ public static class DependencyInjection
         _ = services.AddScoped<IStaffAssignmentRepository, StaffAssignmentRepository>();
         _ = services.AddScoped<ITaskListRepository, TaskListRepository>();
         _ = services.AddScoped<IAuditRepository, AuditRepository>();
+       _ =  services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
         // UC-010 GDPR compliance repositories
         _ = services.AddScoped<IRetentionPolicyRepository, RetentionPolicyRepository>();
+        _ = services.AddScoped<IRetentionPolicyAuditRepository, RetentionPolicyAuditRepository>();
         _ = services.AddScoped<IAnonymizationCandidateRepository, AnonymizationCandidateRepository>();
         _ = services.AddScoped<ISecurityIncidentRepository, SecurityIncidentRepository>();
+        _ = services.AddScoped<ISubjectAccessRequestRepository, SubjectAccessRequestRepository>();
+        _ = services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
 
         // Identity services
         _ = services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();

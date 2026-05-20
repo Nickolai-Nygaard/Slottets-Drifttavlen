@@ -1,11 +1,12 @@
-// Copyright (c) 2026 Team6. All rights reserved. 
+// Copyright (c) 2026 Team6. All rights reserved.
 //  No warranty, explicit or implicit, provided.
 
 using Core.Interfaces.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 
-namespace WebUI.Components.Pages.Gdpr;
+namespace WebUI.Client.Components.Pages.Gdpr;
 
 /// <summary>
 /// GDPR Compliance Dashboard — central hub for Admin to access all UC-010 features.
@@ -19,23 +20,37 @@ public partial class GdprDashboardPage : ComponentBase
 
     [Inject]
     private ISecurityIncidentService SecurityIncidentService { get; set; } = default!;
-
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
     #endregion
 
     #region Fields
 
     private int _pendingCandidates;
     private int _openIncidents;
+    private string? _loadError;
 
     #endregion
 
     #region Lifecycle
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender)
+        {
+            return;
+        }
+        // Auto-login as the read-only dashboard kiosk user if not already authenticated.
+        await InitializeAuthorizationAsync();
         await LoadCountersAsync();
+        StateHasChanged();
     }
 
+    private async Task InitializeAuthorizationAsync()
+    {
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _ = authState.User;
+    }
     #endregion
 
     #region Methods
@@ -51,14 +66,14 @@ public partial class GdprDashboardPage : ComponentBase
             IEnumerable<Core.DTOs.Security.SecurityIncidentDto> incidents =
                 await SecurityIncidentService.GetIncidentsAsync(CancellationToken.None);
             _openIncidents = incidents.Count(i =>
-                i.Status == Domain.Enums.IncidentStatus.Open ||
-                i.Status == Domain.Enums.IncidentStatus.UnderInvestigation);
+                i.Status is Domain.Enums.IncidentStatus.Open or
+                Domain.Enums.IncidentStatus.UnderInvestigation);
         }
-        catch
+        catch (Exception ex)
         {
-            // Counters default to 0 if API unavailable — page still renders
             _pendingCandidates = 0;
             _openIncidents = 0;
+            _loadError = ex.Message;
         }
     }
 

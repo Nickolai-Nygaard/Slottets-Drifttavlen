@@ -64,7 +64,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("12345678-1234-5678-1234-567812345678"),
+                Id = Guid.Parse("12345678-1234-5678-1234-598812345678"),
                 Title = "indkøb",
                 Description = "Tasks to be completed in the morning.",
                 TaskStatus = TaskListStatus.InProgress,
@@ -73,7 +73,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("87654321-4321-8765-4321-876543218765"),
+                Id = Guid.Parse("87654321-4321-8765-4321-598543218765"),
                 Title = "rengøring",
                 Description = "Tasks to be completed in the afternoon.",
                 TaskStatus = TaskListStatus.InProgress,
@@ -82,7 +82,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("11223344-5566-7788-99AA-BBCCDDEEFF00"),
+                Id = Guid.Parse("11223344-5566-7788-99AA-BBCCDDEEFF20"),
                 Title = "lave aftensmad",
                 Description = "Tasks to be completed in the evening.",
                 TaskStatus = TaskListStatus.InProgress,
@@ -91,7 +91,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("12345678-1234-5678-1234-567812345678"),
+                Id = Guid.Parse("65345678-1234-5678-1234-598812345678"),
                 Title = "indkøb",
                 Description = "Tasks to be completed in the morning.",
                 TaskStatus = TaskListStatus.InProgress,
@@ -100,7 +100,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("87654321-4321-8765-4321-876543218765"),
+                Id = Guid.Parse("87695221-4321-8765-4321-598543218765"),
                 Title = "rengøring",
                 Description = "Tasks to be completed in the afternoon.",
                 TaskStatus = TaskListStatus.InProgress,
@@ -109,7 +109,7 @@ public class TaskListConfiguration : IEntityTypeConfiguration<TaskList>
             },
             new TaskList
             {
-                Id = Guid.Parse("11223344-5566-7788-99AA-BBCCDDEEFF00"),
+                Id = Guid.Parse("11223344-5566-7788-99AA-BBCCDDEEFF30"),
                 Title = "lave aftensmad",
                 Description = "Tasks to be completed in the evening.",
                 TaskStatus = TaskListStatus.InProgress,

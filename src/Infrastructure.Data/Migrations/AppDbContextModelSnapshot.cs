@@ -209,6 +209,47 @@ namespace Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.LoginAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("AttemptedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("EmailHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("FailureReason")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttemptedAt");
+
+                    b.HasIndex("EmailHash", "AttemptedAt");
+
+                    b.HasIndex("IpAddress", "AttemptedAt");
+
+                    b.ToTable("LoginAttempts");
+                });
+
             modelBuilder.Entity("Domain.Entities.MedicineRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -368,6 +409,9 @@ namespace Infrastructure.Data.Migrations
 
                     b.Property<int>("Department")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("DischargedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -958,11 +1002,57 @@ namespace Infrastructure.Data.Migrations
                     b.ToTable("StaffAssignments");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SubjectAccessRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ExportFileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("ExportGeneratedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FulfilledAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("FulfilledByEmployeeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("RequestedByEmployeeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResidentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ScopeOptions")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FulfilledAt");
+
+                    b.HasIndex("ResidentId");
+
+                    b.ToTable("SubjectAccessRequests");
+                });
+
             modelBuilder.Entity("Domain.Entities.TaskList", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -982,30 +1072,87 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TaskLists");
+                    b.ToTable("TaskLists", (string)null);
 
                     b.HasData(
                         new
                         {
                             Id = new Guid("12345678-1234-5678-1234-567812345678"),
+                            Department = 1,
                             Description = "Tasks to be completed in the morning.",
-                            DueTime = new DateTime(2026, 5, 14, 4, 27, 33, 448, DateTimeKind.Local).AddTicks(8709),
+                            DueTime = new DateTime(2026, 5, 20, 6, 5, 21, 943, DateTimeKind.Local).AddTicks(3941),
                             TaskStatus = 1,
                             Title = "indkøb"
                         },
                         new
                         {
                             Id = new Guid("87654321-4321-8765-4321-876543218765"),
+                            Department = 1,
                             Description = "Tasks to be completed in the afternoon.",
-                            DueTime = new DateTime(2026, 5, 14, 6, 27, 33, 448, DateTimeKind.Local).AddTicks(8755),
+                            DueTime = new DateTime(2026, 5, 20, 8, 5, 21, 943, DateTimeKind.Local).AddTicks(3983),
                             TaskStatus = 1,
                             Title = "rengøring"
                         },
                         new
                         {
                             Id = new Guid("11223344-5566-7788-99aa-bbccddeeff00"),
+                            Department = 1,
                             Description = "Tasks to be completed in the evening.",
-                            DueTime = new DateTime(2026, 5, 14, 8, 27, 33, 448, DateTimeKind.Local).AddTicks(8757),
+                            DueTime = new DateTime(2026, 5, 20, 10, 5, 21, 943, DateTimeKind.Local).AddTicks(3985),
+                            TaskStatus = 1,
+                            Title = "lave aftensmad"
+                        },
+                        new
+                        {
+                            Id = new Guid("12345678-1234-5678-1234-598812345678"),
+                            Department = 0,
+                            Description = "Tasks to be completed in the morning.",
+                            DueTime = new DateTime(2026, 5, 20, 6, 5, 21, 943, DateTimeKind.Local).AddTicks(3987),
+                            TaskStatus = 1,
+                            Title = "indkøb"
+                        },
+                        new
+                        {
+                            Id = new Guid("87654321-4321-8765-4321-598543218765"),
+                            Department = 0,
+                            Description = "Tasks to be completed in the afternoon.",
+                            DueTime = new DateTime(2026, 5, 20, 8, 5, 21, 943, DateTimeKind.Local).AddTicks(3988),
+                            TaskStatus = 1,
+                            Title = "rengøring"
+                        },
+                        new
+                        {
+                            Id = new Guid("11223344-5566-7788-99aa-bbccddeeff20"),
+                            Department = 0,
+                            Description = "Tasks to be completed in the evening.",
+                            DueTime = new DateTime(2026, 5, 20, 10, 5, 21, 943, DateTimeKind.Local).AddTicks(3990),
+                            TaskStatus = 1,
+                            Title = "lave aftensmad"
+                        },
+                        new
+                        {
+                            Id = new Guid("65345678-1234-5678-1234-598812345678"),
+                            Department = 2,
+                            Description = "Tasks to be completed in the morning.",
+                            DueTime = new DateTime(2026, 5, 20, 6, 5, 21, 943, DateTimeKind.Local).AddTicks(3992),
+                            TaskStatus = 1,
+                            Title = "indkøb"
+                        },
+                        new
+                        {
+                            Id = new Guid("87695221-4321-8765-4321-598543218765"),
+                            Department = 2,
+                            Description = "Tasks to be completed in the afternoon.",
+                            DueTime = new DateTime(2026, 5, 20, 8, 5, 21, 943, DateTimeKind.Local).AddTicks(3993),
+                            TaskStatus = 1,
+                            Title = "rengøring"
+                        },
+                        new
+                        {
+                            Id = new Guid("11223344-5566-7788-99aa-bbccddeeff30"),
+                            Department = 2,
+                            Description = "Tasks to be completed in the evening.",
+                            DueTime = new DateTime(2026, 5, 20, 10, 5, 21, 943, DateTimeKind.Local).AddTicks(3995),
                             TaskStatus = 1,
                             Title = "lave aftensmad"
                         });
@@ -1410,7 +1557,7 @@ namespace Infrastructure.Data.Migrations
                         {
                             Id = 1002,
                             ClaimType = "permission",
-                            ClaimValue = "department:slottets:basic",
+                            ClaimValue = "department:slottet:basic",
                             UserId = new Guid("30cffcf9-5784-4fa9-9c10-c013ef3faf16")
                         },
                         new
@@ -1438,7 +1585,7 @@ namespace Infrastructure.Data.Migrations
                         {
                             Id = 1006,
                             ClaimType = "permission",
-                            ClaimValue = "department:slottets:basic",
+                            ClaimValue = "department:slottet:basic",
                             UserId = new Guid("4711a300-711e-4132-86d4-cafd3f11deec")
                         },
                         new
@@ -1645,6 +1792,17 @@ namespace Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+
+                    b.Navigation("Resident");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SubjectAccessRequest", b =>
+                {
+                    b.HasOne("Domain.Entities.Resident", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Resident");
                 });

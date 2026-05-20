@@ -1,12 +1,14 @@
 @* UC-010 - Security Incidents Management (Admin only) *@
 
 @page "/admin/gdpr/incidents"
-@rendermode InteractiveServer
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
+@rendermode InteractiveAuto
+@* @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")] *@
 
 @using Core.DTOs.Security
 @using Domain.Enums
 
+<AuthorizeView Roles="admin">
+  <Authorized>
 <PageTitle>Security Incidents</PageTitle>
 
 <main class="container mt-4">
@@ -97,6 +99,19 @@
 
                                 <dt class="col-sm-5">Status</dt>
                                 <dd class="col-sm-7"><span class="badge @GetStatusBadgeClass(_selectedIncident.Status)">@_selectedIncident.Status</span></dd>
+
+                                <dt class="col-sm-5">Art. 33 deadline</dt>
+                                <dd class="col-sm-7">
+                                    @{
+                                        TimeSpan remaining = _selectedIncident.BreachNotificationDeadlineUtc - DateTime.UtcNow;
+                                        string deadlineClass = GetDeadlineBadgeClass(remaining, _selectedIncident.Status);
+                                        string deadlineLabel = FormatDeadline(remaining, _selectedIncident.Status);
+                                    }
+                                    <span class="badge @deadlineClass" title="GDPR Art. 33(1) — 72 hours from DetectedAt">
+                                        @deadlineLabel
+                                    </span>
+                                    <div class="small text-muted mt-1">@_selectedIncident.BreachNotificationDeadlineUtc.ToString("yyyy-MM-dd HH:mm 'UTC'")</div>
+                                </dd>
                             </dl>
 
                             <h6>Investigation notes</h6>
@@ -141,3 +156,5 @@
         </div>
     }
 </main>
+</Authorized>
+</AuthorizeView>
