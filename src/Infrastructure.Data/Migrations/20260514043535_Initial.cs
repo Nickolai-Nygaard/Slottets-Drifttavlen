@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/Infrastructure.Data/Migrations/20260514002733_Initial.cs
-﻿using System;
-========
 using System;
->>>>>>>> main:src/Infrastructure.Data/Migrations/20260514043535_Initial.cs
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -165,24 +161,6 @@ namespace Infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SecurityIncidents", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "TaskLists",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Title = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Description = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TaskStatus = table.Column<int>(type: "int", nullable: false),
-                    DueTime = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TaskLists", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -614,16 +592,6 @@ namespace Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "TaskLists",
-                columns: new[] { "Id", "Description", "DueTime", "TaskStatus", "Title" },
-                values: new object[,]
-                {
-                    { new Guid("11223344-5566-7788-99aa-bbccddeeff00"), "Tasks to be completed in the evening.", new DateTime(2026, 5, 14, 8, 27, 33, 448, DateTimeKind.Local).AddTicks(8757), 1, "lave aftensmad" },
-                    { new Guid("12345678-1234-5678-1234-567812345678"), "Tasks to be completed in the morning.", new DateTime(2026, 5, 14, 4, 27, 33, 448, DateTimeKind.Local).AddTicks(8709), 1, "indkøb" },
-                    { new Guid("87654321-4321-8765-4321-876543218765"), "Tasks to be completed in the afternoon.", new DateTime(2026, 5, 14, 6, 27, 33, 448, DateTimeKind.Local).AddTicks(8755), 1, "rengøring" }
-                });
-
-            migrationBuilder.InsertData(
                 table: "AspNetRoleClaims",
                 columns: new[] { "Id", "ClaimType", "ClaimValue", "RoleId" },
                 values: new object[,]
@@ -863,9 +831,6 @@ namespace Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "StaffAssignments");
-
-            migrationBuilder.DropTable(
-                name: "TaskLists");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
