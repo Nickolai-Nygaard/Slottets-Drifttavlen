@@ -11,16 +11,16 @@ using System.Net.Http.Json;
 using Core.DTOs;
 using Core.Interfaces.Managers;
 
+using Domain.Enums;
+
 namespace Infrastructure.Managers;
 
 public class TaskListManager(IHttpClientFactory httpClientFactory) : HttpApiManagerBase(httpClientFactory, "SlottetApi"), ITaskListManager
 {
 
 
-    public async Task<IEnumerable<TaskListDto>> GetAvailableTasksByShift(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TaskListDto>> GetDashboardTasksByDepartmentAsync(Department department, CancellationToken cancellationToken = default)
     {
-        IEnumerable<TaskListDto>? response = await HttpClient.GetFromJsonAsync<IEnumerable<TaskListDto>>("tasklist/Dashboard", cancellationToken);
-
-        return response ?? [];
+        return await HttpClient.GetFromJsonAsync<IEnumerable<TaskListDto>>($"TaskList/dashboard/{department}", cancellationToken) ?? [];
     }
 }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Core.DTOs;
+using Core.Interfaces.Managers;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Mappers;
@@ -16,18 +17,13 @@ using Domain.Entities;
 
 namespace Core.Services;
 
-public class TaskListService : ITaskListService
+public class TaskListService(ITaskListManager taskListManager) : ITaskListService
 {
-    private readonly ITaskListRepository _taskListRepository;
+    private readonly ITaskListManager _taskListManager = taskListManager;
 
-    public TaskListService(ITaskListRepository taskListRepository)
-    {
-        _taskListRepository = taskListRepository;
-    }
 
     public async Task<IEnumerable<TaskListDto>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
     {
-        var tasks = await _taskListRepository.GetAvailTasksByShiftAsync(cancellationToken);
-        return tasks.Select(t => t.ToTaskListDto());
+        return await _taskListManager.GetAvailableTasksByShiftAsync(cancellationToken);
     }
 }

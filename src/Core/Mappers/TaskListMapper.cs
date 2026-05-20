@@ -23,7 +23,8 @@ public static class TaskListMapper
             Title = taskList.Title,
             Description = taskList.Description,
             TaskListStatus = taskList.TaskStatus,
-            DueTime = taskList.DueTime
+            DueTime = taskList.DueTime,
+            Department = taskList.Department
         };
     }
 }

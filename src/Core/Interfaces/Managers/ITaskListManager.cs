@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 using Core.DTOs;
 
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Core.Interfaces.Managers;
 
 public interface ITaskListManager
 {
-    Task<IEnumerable<TaskListDto>> GetAvailableTasksByShift(CancellationToken cancellationToken = default);
+    Task<IEnumerable<TaskListDto>> GetDashboardTasksByDepartmentAsync(Department department, CancellationToken cancellationToken = default);
 }

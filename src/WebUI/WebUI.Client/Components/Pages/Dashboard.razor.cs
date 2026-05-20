@@ -2,6 +2,8 @@
 //  No warranty, explicit or implicit, provided.
 
 using Core.DTOs;
+using Core.Interfaces.Managers;
+using Core.Interfaces.Services;
 using Core.Services;
 
 using Domain.Entities;
@@ -22,7 +24,7 @@ public partial class Dashboard
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
     [Inject]
-    private TaskListService TaskListService { get; set; } = default!;
+    private ITaskListManager taskListManager { get; set; } = default!;
     #endregion
     #region Fields
 
@@ -96,13 +98,14 @@ public partial class Dashboard
             })]
         })];
 
+        tasks = Department == null
+            ? []
+            : await taskListManager.GetDashboardTasksByDepartmentAsync(parsedDepartment);
+
         _isLoading = false;
         StateHasChanged();
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        tasks = await TaskListService.GetAvailTasksByShiftAsync();
-    }
+
     #endregion
 }

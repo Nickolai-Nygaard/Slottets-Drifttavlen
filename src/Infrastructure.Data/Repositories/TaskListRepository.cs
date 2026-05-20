@@ -20,11 +20,11 @@ namespace Infrastructure.Data.Repositories;
 
 public class TaskListRepository(AppDbContext dbContext) : Repository<TaskList>(dbContext), ITaskListRepository
 {
-    public async Task<IEnumerable<TaskList>> GetAvailTasksByShiftAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TaskList>> GetDashboardTasksByDepartmentAsync(Department department, CancellationToken cancellationToken = default)
     {
         return await _context.TaskLists
             .AsNoTracking()
-            .Where(t => t.DueTime > DateTime.UtcNow && (t.TaskStatus != TaskListStatus.Success))
+            .Where(t => t.TaskStatus != TaskListStatus.Success && t.Department == department)
             .OrderByDescending(t => t.DueTime)
             .ToListAsync(cancellationToken);
     }

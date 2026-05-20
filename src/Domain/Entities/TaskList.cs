@@ -28,4 +28,7 @@ public class TaskList : IEntity
     [Required]
     public DateTime DueTime { get; set; }
 
+    [Required]
+    public Department Department { get; set; }
+
 }

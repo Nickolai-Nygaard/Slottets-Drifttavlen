@@ -18,4 +18,5 @@ public class TaskListDto
     public string Description { get; set; } = string.Empty;
     public TaskListStatus TaskListStatus { get; set; }
     public DateTime DueTime { get; set; }
+    public Department Department { get; set; }
 }

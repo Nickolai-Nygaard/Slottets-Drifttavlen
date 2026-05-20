@@ -1,27 +1,31 @@
 // Copyright (c) 2026 Team6. All rights reserved. 
 //  No warranty, explicit or implicit, provided.
 
+using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Mappers;
+
+using Domain.Enums;
 
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class TaskListController : ControllerBase
 {
-    private readonly ITaskListService _taskListService;
+    private readonly ITaskListRepository _taskListRepository;
 
-    public TaskListController(ITaskListService taskListService)
+    public TaskListController(ITaskListRepository taskListRepository)
     {
-        _taskListService = taskListService;
+        _taskListRepository = taskListRepository;
     }
 
-    [HttpGet("Dashboard")]
-    public async Task<IActionResult> GetAvailableTasksByShift(CancellationToken cancellationToken = default)
+    [HttpGet("dashboard/{department}")]
+    public async Task<IActionResult> GetDashboardTasksByDepartment(Department department, CancellationToken cancellationToken = default)
     {
-        var tasks = await _taskListService.GetAvailTasksByShiftAsync(cancellationToken);
-        return Ok(tasks);
+        var tasks = await _taskListRepository.GetDashboardTasksByDepartmentAsync(department, cancellationToken);
+        return Ok(tasks.Select(t => t.ToTaskListDto()));
     }
 }
